@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DueHound – Invoice Tracker & Reminders</title>
+  <meta name="description" content="Stop wondering who still owes you. DueHound tracks invoices you've sent, reminds you when they're due, and writes your follow-up for you." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #F26A1B;
+      --orange-light: #FF8C42;
+      --orange-dark: #D45A10;
+      --bg: #0F0E0D;
+      --bg2: #181614;
+      --bg3: #201D1A;
+      --text: #F5F0EA;
+      --muted: #9A8F84;
+      --border: #2E2925;
+      --radius: 20px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      background: rgba(15, 14, 13, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      width: 34px; height: 34px;
+      background: var(--orange);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--orange);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 10px 20px;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .nav-cta:hover { background: var(--orange-light); transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      padding: 130px 40px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: 50%; transform: translateX(-50%);
+      width: 900px; height: 900px;
+      background: radial-gradient(ellipse at center, rgba(242,106,27,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(242,106,27,0.12);
+      border: 1px solid rgba(242,106,27,0.3);
+      color: var(--orange-light);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 50px;
+      margin-bottom: 28px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.6rem, 6vw, 4.8rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      max-width: 800px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--orange), var(--orange-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--muted);
+      max-width: 540px;
+      line-height: 1.65;
+      margin-bottom: 40px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 70px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--orange);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 16px 32px;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 8px 32px rgba(242,106,27,0.35);
+    }
+
+    .btn-primary:hover {
+      background: var(--orange-light);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(242,106,27,0.5);
+    }
+
+    .btn-primary svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 15px 28px;
+      border-radius: 50px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .btn-secondary:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── SCREENSHOT STRIP ── */
+    .screenshots-hero {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 16px;
+      width: 100%;
+      max-width: 960px;
+      padding-bottom: 20px;
+    }
+
+    .screenshots-hero .ss-wrap {
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0;
+      transition: transform 0.3s;
+    }
+
+    .screenshots-hero .ss-wrap:hover { transform: translateY(-8px); }
+
+    .screenshots-hero .ss-wrap.center {
+      transform: translateY(-24px) scale(1.06);
+      box-shadow: 0 32px 80px rgba(242,106,27,0.25), 0 24px 60px rgba(0,0,0,0.7);
+    }
+    .screenshots-hero .ss-wrap.center:hover { transform: translateY(-34px) scale(1.06); }
+
+    .screenshots-hero img {
+      display: block;
+      width: 160px;
+      height: auto;
+    }
+
+    .screenshots-hero .ss-wrap.large img { width: 180px; }
+
+    /* ── SECTION COMMONS ── */
+    section { padding: 100px 40px; }
+
+    .section-label {
+      display: inline-block;
+      color: var(--orange);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    h2.section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      max-width: 520px;
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 40px;
+    }
+
+    .stats-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 2.6rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, var(--orange), var(--orange-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* ── FEATURES ── */
+    .features {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .features-header {
+      text-align: center;
+      margin-bottom: 70px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(242,106,27,0.4);
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      width: 48px; height: 48px;
+      background: rgba(242,106,27,0.12);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+
+    /* ── SHOWCASE (alternating) ── */
+    .showcase {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .showcase-row {
+      display: flex;
+      align-items: center;
+      gap: 80px;
+      margin-bottom: 120px;
+    }
+
+    .showcase-row:last-child { margin-bottom: 0; }
+
+    .showcase-row.reverse { flex-direction: row-reverse; }
+
+    .showcase-text { flex: 1; }
+
+    .showcase-text h3 {
+      font-size: clamp(1.5rem, 2.5vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 14px;
+      line-height: 1.2;
+    }
+
+    .showcase-text p {
+      color: var(--muted);
+      font-size: 0.97rem;
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+
+    .check-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .check-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.93rem;
+      color: var(--muted);
+    }
+
+    .check-list li::before {
+      content: '';
+      display: block;
+      width: 18px; height: 18px;
+      background: rgba(242,106,27,0.15);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 1px;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='8' viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4L3.5 6.5L9 1' stroke='%23F26A1B' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .showcase-phone {
+      flex: 0 0 auto;
+      position: relative;
+    }
+
+    .showcase-phone img {
+      width: 240px;
+      border-radius: 36px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07);
+      display: block;
+    }
+
+    .showcase-phone::after {
+      content: '';
+      position: absolute;
+      inset: -30px;
+      background: radial-gradient(ellipse at center, rgba(242,106,27,0.1) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: -1;
+      border-radius: 50%;
+    }
+
+    /* ── PRICING ── */
+    .pricing-section {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+    }
+
+    .pricing-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .pricing-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 50px;
+    }
+
+    .pricing-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 32px;
+      text-align: left;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--orange);
+      background: linear-gradient(135deg, rgba(242,106,27,0.08) 0%, var(--bg3) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pricing-card.featured::before {
+      content: 'BEST VALUE';
+      position: absolute;
+      top: 16px; right: -24px;
+      background: var(--orange);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      padding: 4px 28px;
+      transform: rotate(45deg);
+    }
+
+    .pricing-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .pricing-price {
+      font-size: 2.4rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .pricing-price .currency { font-size: 1.2rem; vertical-align: super; }
+
+    .pricing-note {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 28px;
+    }
+
+    .pricing-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .pricing-features li {
+      display: flex;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      align-items: center;
+    }
+
+    .pricing-features li .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--orange);
+      flex-shrink: 0;
+    }
+
+    .btn-plan {
+      display: block;
+      text-align: center;
+      padding: 14px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-plan.outline {
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .btn-plan.outline:hover { border-color: var(--muted); color: var(--text); }
+
+    .btn-plan.fill {
+      background: var(--orange);
+      color: #fff;
+      box-shadow: 0 6px 24px rgba(242,106,27,0.3);
+    }
+
+    .btn-plan.fill:hover { background: var(--orange-light); }
+
+    /* ── PRIVACY CALLOUT ── */
+    .privacy-callout {
+      max-width: 900px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, rgba(242,106,27,0.08) 0%, var(--bg2) 100%);
+      border: 1px solid rgba(242,106,27,0.25);
+      border-radius: var(--radius);
+      padding: 52px 60px;
+      display: flex;
+      align-items: center;
+      gap: 40px;
+    }
+
+    .privacy-callout .icon {
+      font-size: 52px;
+      flex-shrink: 0;
+    }
+
+    .privacy-callout h3 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+
+    .privacy-callout p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+
+    /* ── DOWNLOAD CTA ── */
+    .download-section {
+      text-align: center;
+      padding: 120px 40px;
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .download-section::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(ellipse at center, rgba(242,106,27,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .download-section h2 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      max-width: 700px;
+      margin: 0 auto 16px;
+    }
+
+    .download-section p {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 40px;
+    }
+
+    .app-store-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--text);
+      color: var(--bg);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 16px 32px;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .app-store-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 44px rgba(0,0,0,0.5); }
+
+    .app-store-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    footer .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+
+    footer p {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+
+    footer a:hover { color: var(--text); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+
+      .hero { padding: 110px 20px 60px; }
+
+      section { padding: 70px 20px; }
+
+      .screenshots-hero { gap: 8px; }
+      .screenshots-hero img { width: 100px; }
+      .screenshots-hero .ss-wrap.large img { width: 112px; }
+
+      .stats-inner { grid-template-columns: 1fr; gap: 28px; }
+
+      .features-grid { grid-template-columns: 1fr; }
+
+      .showcase-row,
+      .showcase-row.reverse { flex-direction: column; gap: 40px; }
+
+      .showcase-phone img { width: 200px; }
+
+      .pricing-cards { grid-template-columns: 1fr; }
+
+      .privacy-callout { flex-direction: column; padding: 36px 28px; text-align: center; }
+
+      .download-section { padding: 80px 20px; }
+
+      footer { flex-direction: column; text-align: center; padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAVIGATION ── -->
+<nav>
+  <a href="#" class="nav-logo" aria-label="DueHound home">
+    <div class="nav-logo-icon">🐕</div>
+    DueHound
+  </a>
+  <a href="https://apps.apple.com/us/app/duehound/id6814907396" class="nav-cta" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+    Download Free
+  </a>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero" aria-labelledby="hero-heading">
+  <div class="hero-badge">
+    <span>📱</span> Available on the App Store
+  </div>
+  <h1 id="hero-heading">
+    You already sent<br/>the invoice.<br/>
+    <span>Get it paid.</span>
+  </h1>
+  <p class="hero-sub">
+    DueHound tracks every invoice you've sent, nudges you when they're due, and writes the follow-up so you don't have to.
+  </p>
+  <div class="hero-actions">
+    <a href="https://apps.apple.com/us/app/duehound/id6814907396" class="btn-primary" target="_blank" rel="noopener" aria-label="Download DueHound on the App Store">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      Download on the App Store
+    </a>
+    <a href="#features" class="btn-secondary">See how it works ↓</a>
+  </div>
+
+  <!-- Screenshot strip -->
+  <div class="screenshots-hero" role="img" aria-label="DueHound app screenshots">
+    <div class="ss-wrap">
+      <img src="314x680bb-2.webp" alt="DueHound overdue invoices screen" loading="lazy" />
+    </div>
+    <div class="ss-wrap large">
+      <img src="314x680bb-3.webp" alt="DueHound invoice list screen" loading="lazy" />
+    </div>
+    <div class="ss-wrap center large">
+      <img src="314x680bb.webp" alt="DueHound dashboard screen" loading="lazy" />
+    </div>
+    <div class="ss-wrap large">
+      <img src="314x680bb-4.webp" alt="DueHound client details screen" loading="lazy" />
+    </div>
+    <div class="ss-wrap">
+      <img src="314x680bb-5.webp" alt="DueHound reminders screen" loading="lazy" />
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS BAR ── -->
+<div class="stats-bar" role="region" aria-label="App highlights">
+  <div class="stats-inner">
+    <div>
+      <div class="stat-num">4</div>
+      <div class="stat-label">Automatic reminders per invoice</div>
+    </div>
+    <div>
+      <div class="stat-num">0</div>
+      <div class="stat-label">Data collected. Ever.</div>
+    </div>
+    <div>
+      <div class="stat-num">Free</div>
+      <div class="stat-label">No subscription. One-time premium.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FEATURES ── -->
+<section id="features" aria-labelledby="features-heading">
+  <div class="features">
+    <div class="features-header">
+      <div class="section-label">Features</div>
+      <h2 class="section-title" id="features-heading">Everything you need to chase payments</h2>
+      <p class="section-sub" style="margin:0 auto;">Built for freelancers, contractors, and one-person businesses who invoice and move on — until they have to follow up.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon" aria-hidden="true">📊</div>
+        <h3>At-a-glance dashboard</h3>
+        <p>Four numbers up top: total unpaid, total overdue, due soon, and whether today needs a nudge. Invoices ranked by urgency below.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" aria-hidden="true">🔔</div>
+        <h3>Smart reminders</h3>
+        <p>Four automatic notifications per invoice — the day before, the day of, three days late, and a week late — at the hour you pick.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" aria-hidden="true">✉️</div>
+        <h3>Follow-up text, written for you</h3>
+        <p>Tap once for a polished, ready-to-send nudge with the invoice number, amount, and due date already filled in.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" aria-hidden="true">👥</div>
+        <h3>Client-aware</h3>
+        <p>Store each client's email, phone, payment terms, and contact preference. New invoices inherit their terms automatically.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" aria-hidden="true">🗂️</div>
+        <h3>Payment archive</h3>
+        <p>Paid invoices move to an archive with a running total, so you can see what a client or a quarter actually brought in.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" aria-hidden="true">🔒</div>
+        <h3>Private by design</h3>
+        <p>No account, no sign-up, no server. Everything stays on your device and works with no connection at all.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SHOWCASE ROWS ── -->
+<section style="background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);" aria-labelledby="showcase-heading">
+  <div class="showcase">
+    <h2 class="section-title" id="showcase-heading" style="text-align:center; margin-bottom: 80px;">A closer look</h2>
+
+    <div class="showcase-row">
+      <div class="showcase-text">
+        <div class="section-label">Dashboard</div>
+        <h3>Your money situation, in one glance</h3>
+        <p>Open the app and see exactly what's outstanding, what's overdue, and what needs attention today. Invoices are grouped by urgency so the oldest debt is always on top.</p>
+        <ul class="check-list">
+          <li>Total unpaid and overdue at the top</li>
+          <li>Overdue, Due Soon, and Awaiting Payment groups</li>
+          <li>Client leaderboard by outstanding balance</li>
+        </ul>
+      </div>
+      <div class="showcase-phone">
+        <img src="314x680bb.webp" alt="DueHound dashboard showing invoice summary" loading="lazy" />
+      </div>
+    </div>
+
+    <div class="showcase-row reverse">
+      <div class="showcase-text">
+        <div class="section-label">Reminders</div>
+        <h3>Nudged before you'd even think to look</h3>
+        <p>Every unpaid invoice gets four notifications automatically. Each one names the client and amount so you know exactly what it's about without opening the app.</p>
+        <ul class="check-list">
+          <li>Day before due, day of, 3 days late, 1 week late</li>
+          <li>Delivered at your chosen hour, every time</li>
+          <li>Reminders disappear the moment you mark it paid</li>
+        </ul>
+      </div>
+      <div class="showcase-phone">
+        <img src="314x680bb-5.webp" alt="DueHound reminders and notification settings" loading="lazy" />
+      </div>
+    </div>
+
+    <div class="showcase-row">
+      <div class="showcase-text">
+        <div class="section-label">Follow-ups</div>
+        <h3>The message is already written</h3>
+        <p>Tap once and a polite, professional follow-up appears with the invoice number, amount, and due date filled in. Open it in Mail or copy it to paste wherever you talk to your clients.</p>
+        <ul class="check-list">
+          <li>Pre-filled with invoice and client details</li>
+          <li>Opens directly in Mail or copy to clipboard</li>
+          <li>Professional tone, no awkward drafting</li>
+        </ul>
+      </div>
+      <div class="showcase-phone">
+        <img src="314x680bb-3.webp" alt="DueHound follow-up message composer" loading="lazy" />
+      </div>
+    </div>
+
+    <div class="showcase-row reverse">
+      <div class="showcase-text">
+        <div class="section-label">Clients</div>
+        <h3>A smart client list that does the math</h3>
+        <p>Store contact details, preferred payment terms, and communication preferences for each client. New invoices inherit their terms so the due date is always right.</p>
+        <ul class="check-list">
+          <li>Email, phone, and contact preferences stored</li>
+          <li>Default payment terms auto-fill new invoices</li>
+          <li>Full history and outstanding balance per client</li>
+        </ul>
+      </div>
+      <div class="showcase-phone">
+        <img src="314x680bb-4.webp" alt="DueHound client profile and history" loading="lazy" />
+      </div>
+    </div>
+
+    <div class="showcase-row">
+      <div class="showcase-text">
+        <div class="section-label">Archive</div>
+        <h3>A record of everything that came in</h3>
+        <p>Paid invoices move to a searchable archive with a running total. See what a client paid over a year, or what a quarter actually brought in — without a spreadsheet.</p>
+        <ul class="check-list">
+          <li>All paid invoices with timestamps</li>
+          <li>Running totals by client and period</li>
+          <li>Instant payment history at your fingertips</li>
+        </ul>
+      </div>
+      <div class="showcase-phone">
+        <img src="314x680bb-6.webp" alt="DueHound payment archive" loading="lazy" />
+      </div>
+    </div>
+
+    <div class="showcase-row reverse">
+      <div class="showcase-text">
+        <div class="section-label">Overdue Tracker</div>
+        <h3>See everything that's late, sorted by age</h3>
+        <p>The overdue list is sorted by due date so the oldest outstanding invoice is always first. You always know who's been sitting on your money the longest.</p>
+        <ul class="check-list">
+          <li>Sorted by due date, oldest first</li>
+          <li>Overdue amount shown at a glance</li>
+          <li>One tap to send a follow-up</li>
+        </ul>
+      </div>
+      <div class="showcase-phone">
+        <img src="314x680bb-2.webp" alt="DueHound overdue invoice list" loading="lazy" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRICING ── -->
+<section class="pricing-section" aria-labelledby="pricing-heading">
+  <div class="pricing-inner">
+    <div class="section-label">Pricing</div>
+    <h2 class="section-title" id="pricing-heading">Start free. Upgrade when you're ready.</h2>
+    <p class="section-sub" style="margin: 0 auto;">No subscription, no monthly fee. Premium unlocks everything for a single one-time payment and stays on every device signed in to your Apple Account.</p>
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <div class="pricing-name">Free</div>
+        <div class="pricing-price">$0</div>
+        <div class="pricing-note">Forever free</div>
+        <ul class="pricing-features">
+          <li><span class="dot" aria-hidden="true"></span>Up to 5 invoices</li>
+          <li><span class="dot" aria-hidden="true"></span>Up to 3 clients</li>
+          <li><span class="dot" aria-hidden="true"></span>Up to 5 archived payments</li>
+          <li><span class="dot" aria-hidden="true"></span>All reminders included</li>
+          <li><span class="dot" aria-hidden="true"></span>No account needed</li>
+        </ul>
+        <a href="https://apps.apple.com/us/app/duehound/id6814907396" class="btn-plan outline" target="_blank" rel="noopener">Download Free</a>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-name">Premium</div>
+        <div class="pricing-price">One-time</div>
+        <div class="pricing-note">Pay once, yours forever</div>
+        <ul class="pricing-features">
+          <li><span class="dot" aria-hidden="true"></span>Unlimited invoices</li>
+          <li><span class="dot" aria-hidden="true"></span>Unlimited clients</li>
+          <li><span class="dot" aria-hidden="true"></span>Unlimited archive</li>
+          <li><span class="dot" aria-hidden="true"></span>Works on all your Apple devices</li>
+          <li><span class="dot" aria-hidden="true"></span>No subscription, ever</li>
+        </ul>
+        <a href="https://apps.apple.com/us/app/duehound/id6814907396" class="btn-plan fill" target="_blank" rel="noopener">Get Premium</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRIVACY CALLOUT ── -->
+<section aria-labelledby="privacy-heading">
+  <div class="privacy-callout">
+    <div class="icon" aria-hidden="true">🔐</div>
+    <div>
+      <h3 id="privacy-heading">Your data never leaves your phone</h3>
+      <p>No account. No sign-up. No server. DueHound works entirely on your device — your client list and income figures are never uploaded anywhere, because there's nowhere for them to go. It even works with no internet connection at all.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── DOWNLOAD CTA ── -->
+<section class="download-section" aria-labelledby="download-heading">
+  <h2 id="download-heading">Stop chasing.<br/>Start getting paid.</h2>
+  <p>Download DueHound free and see what's outstanding in under a minute.</p>
+  <a href="https://apps.apple.com/us/app/duehound/id6814907396" class="app-store-btn" target="_blank" rel="noopener" aria-label="Download DueHound on the App Store">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+    Download on the App Store
+  </a>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="logo">
+    <div class="nav-logo-icon" aria-hidden="true">🐕</div>
+    DueHound
+  </div>
+  <p>© 2026 Ramill Ibragimov. All rights reserved.</p>
+  <a href="https://apps.apple.com/us/app/duehound/id6814907396" target="_blank" rel="noopener">App Store ↗</a>
+</footer>
+
+</body>
+</html>
